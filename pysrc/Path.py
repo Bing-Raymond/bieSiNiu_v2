@@ -17,6 +17,7 @@ class Path:
     def getFriends(self):
         return self._friends
 
+
     def getActPoint(self):
         return self._actPoint
 
@@ -24,6 +25,13 @@ class Path:
         print("friends: " + str(self.getFriends()))
         print("Number: " + str(self.getNumber()))
         print("Way: " +str(self.getWay()))
+
+    def isFriend(self,point):
+        for friend in self._friends:
+            if friend == point:
+                return True
+        return False
+
 
 # pa = Path((0,0),{(0,2),(2,0)},1,2)
 # pa.show()

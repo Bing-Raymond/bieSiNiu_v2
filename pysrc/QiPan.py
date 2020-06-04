@@ -13,6 +13,7 @@ class QiPan:
     def __init__(self):
         self._xPos = (1,1)
         self._nPos = (0,0)
+        self._nPos2 = (0,2)
         #self._map = [(0,0), (0,2),(1, 1),(2, 0),(2, 2)]
         self._map = [QiZi((0,0),'N'),QiZi((0,1),'-'), QiZi((0,2),'N'),QiZi((1, 0), '|'),QiZi((1, 1), 'x'), QiZi((1, 2), '#'),QiZi((2, 0), 'R'),QiZi((2,1),'-'),QiZi((2,2),'R')]
         self._pass = [Path((0,0),{(2,0),(1,1),(0,2)},1,3),Path((0,2),{(0,0),(1,1)},2,2),Path((1,1),{(0,0),(0,2),(2,0),(2,2)},3,4),Path((2,0),{(0,0),(1,1),(2,2)},4,3),Path((2,2),{(2,0),(1,1)},5,2)]
@@ -77,54 +78,76 @@ class QiPan:
 
     def moveN(self):
         print("D: QiPan::moveN")
-
-        # 需要知道哪里下子。 findX
-        # 升级版：需要在friends里找到x才能移动。 20200406
-        print("xpos is :" + str(self._xPos))
         self._xPos = self.findX()
-        # 哪里有N findN
+        print("xpos is :" + str(self._xPos))
         self._nPos = self.findN()
-        # 将X点置为N
-        self.getPoint(self._xPos).setN()
-        # 将找到的N置为x
-        self.getPoint(self._nPos).setDefault()
-        print("after modify xpos is : " + str(self._nPos))
-        print("after modify npos is : " + str(self._nPos))
+        self.moveNToFriend(self._nPos,self._xPos)
+        #self.checkPass()
+
+    def moveNToFriend(self,nPoint,xPoint):
+        print("D: QianPan::moveNToFriend")
+        if nPoint == None or xPoint == None:
+            print("Can't move N key. YOU WIN!!!")
+
         # checkN  需要checkN
-        print("Can't move N key. YOU WIN!!!")
-        self.checkPass()
+        elif self.getPath4Point(nPoint).isFriend(xPoint):
+            print("is friend can move to this point")
+                # 将X点置为N
+            self.getPoint(self._xPos).setN()
+            # 将找到的N置为x
+            self.getPoint(self._nPos).setDefault()
+            print("after modify xpos is : " + str(self._xPos))
+            print("after modify npos is : " + str(self._nPos))
+        # checkN  需要checkN
+
     
     def findX(self):
         print("D: QiPan::findX")
         for p in self._map:
             if p.getValue() == 'x':
                 return p.getPos()
-        print("Can't find x point.")
+        #print("Can't find x point.")
 
+    #需要修改一下这个逻辑。让代码自己找到能走的N。而不是找第一个N。
     def findN(self):
-        print("D: QiPan::findN")
         for p in self._map:
-            if p.getValue() == 'N':
+            if p.getValue() == 'N' and self.checkPassFriends(p.getPos()):
+                print("get N pos: " + str(p.getPos()))
                 return p.getPos()
-        print("Can't find N point.")
+        print("Can't find N.")
+        return None
 
     def showPass(self):
         for pa in self._pass:
             pa.show()
 
-    def checkPassFriends(self):
-        print("D: QiPan::checkPass")
+    def getPassFriends(self):
+        print("D: QiPan::getPassFriends")
         for pa in self._pass:
             for friend in pa.getFriends():
-                if self.findX() == friend:
+                if self._xPos == friend:
                     print("find x in friend.")
                     return friend
         return None
     
-    def checkPassPoint(self):
+    def checkPassFriends(self,point):
+        print("D: QiPan::checkPassFriends")
+        if self._xPos in self.getPath4Point(point).getFriends():  # maybe wrong.
+            print("x pos: " + str(self._xPos) + "friends: " + str(self.getPath4Point(point).getFriends()))
+            return True
+        else:
+            return False
+
+    def checkPassPoint(self,point):
         print("D: QiPan::checkPassPoint")
         for pa in self._pass:
             if self.findN() == pa.getActPoint():
                 print("find N in point.")
                 return pa.getActPoint()
         return None
+    
+    def getPath4Point(self,point):
+        for pa in self._pass:
+            if point == pa.getActPoint():
+                print("getPath4Point: npos: " + str(point) +" pa act point: " + str(pa.getActPoint()))
+                return pa
